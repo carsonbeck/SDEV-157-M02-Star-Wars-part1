@@ -1,33 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  SafeAreaView,
-  Modal,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, TextInput, StyleSheet, FlatList, ActivityIndicator, SafeAreaView, Modal, TouchableOpacity, } from 'react-native';
 
-export default function SpaceshipsScreen() {
-  const [starships, setStarships] = useState([]);
+export default function PlanetsScreen() {
+  const [planets, setPlanets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [submittedText, setSubmittedText] = useState('');
-
+  
   useEffect(() => {
-    fetchStarships();
+    fetchPlanets();
   }, []);
 
-  const fetchStarships = async () => {
+  const fetchPlanets = async () => {
     try {
-      const response = await fetch('https://swapi.dev/api/starships/');
-      const data = await response.json();
-      setStarships(data.results);
+      const listResponse = await fetch('https://www.swapi.tech/api/planets/');
+      const listData = await listResponse.json();
+      const planetResults = listData.results;
+
+      const detailedPlanets = await Promise.all(
+        planetResults.map(async (planet) => {
+          const detailResponse = await fetch(planet.url);
+          const detailData = await detailResponse.json();
+          return detailData.result.properties;
+        })
+      );
+      setPlanets(detailedPlanets);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -40,27 +39,24 @@ export default function SpaceshipsScreen() {
     setModalVisible(true);
   };
 
-  const formatCredits = (credits) => {
-    if (credits === 'unknown' || !credits) return 'unknown';
-    return Number(credits).toLocaleString();
+  const formatPopulation = (population) => {
+    if (population === 'unknown' || !population) return 'unknown';
+    return Number(population).toLocaleString();
   };
 
   const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
       <Text style={styles.name}>{item.name}</Text>
-      <Text style={styles.detail}>Model: {item.model}</Text>
-      <Text style={styles.detail}>Manufacturer date: {item.manufacturer}</Text>
-      <Text style={styles.detail}>
-        Cost: {formatCredits(item.cost_in_credits)} credits
-      </Text>
+      <Text style={styles.detail}>Climate: {item.climate}</Text>
+      <Text style={styles.detail}>Terrain: {item.terrain}</Text>
+      <Text style={styles.detail}>Population: {formatPopulation(item.population)}</Text>
     </View>
   );
 
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#FFE81F" />
-      </View>
+        <ActivityIndicator size="large" color="#FFE81F" />     </View>
     );
   }
 
@@ -77,7 +73,7 @@ export default function SpaceshipsScreen() {
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search spaceships..."
+          placeholder="Search planet..."
           placeholderTextColor="#888"
           value={searchTerm}
           onChangeText={setSearchTerm}
@@ -85,9 +81,9 @@ export default function SpaceshipsScreen() {
           returnKeyType="search"
         />
       </View>
-
+      
       <FlatList
-        data={starships}
+        data={planets}
         keyExtractor={(item) => item.name}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
@@ -97,21 +93,21 @@ export default function SpaceshipsScreen() {
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}>
+        onRequestClose={() => setModalVisible(false)}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Search Term</Text>
-            <Text style={styles.modalText}>
-              You searched for: {submittedText}
-            </Text>
+            <Text style={styles.modalText}>You searched for: {submittedText}</Text>
             <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}>
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
+            style={styles.closeButton}
+            onPress={() => setModalVisible(false)}
+          >
+            <Text style={styles.closeButtonText}>Close</Text>
+           </TouchableOpacity>
           </View>
         </View>
-      </Modal>
+      </Modal> 
     </SafeAreaView>
   );
 }
