@@ -1,11 +1,207 @@
-# Sample Snack app
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  SafeAreaView,
+  Modal,
+  TouchableOpacity,
+} from 'react-native';
 
-Open the `App.js` file to start writing some code. You can preview the changes directly on your phone or tablet by scanning the **QR code** or use the iOS or Android emulators. When you're done, click **Save** and share the link!
+export default function SpaceshipsScreen() {
+  const [starships, setStarships] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [submittedText, setSubmittedText] = useState('');
 
-When you're ready to see everything that Expo provides (or if you want to use your own editor) you can **Download** your project and use it with [expo cli](https://docs.expo.dev/get-started/installation/#expo-cli)).
+  useEffect(() => {
+    fetchStarships();
+  }, []);
 
-All projects created in Snack are publicly available, so you can easily share the link to this project via link, or embed it on a web page with the `<>` button.
+  const fetchStarships = async () => {
+    try {
+      const response = await fetch('https://swapi.dev/api/starships/');
+      const data = await response.json();
+      setStarships(data.results);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-If you're having problems, you can tweet to us [@expo](https://twitter.com/expo) or ask in our [forums](https://forums.expo.dev/c/expo-dev-tools/61) or [Discord](https://chat.expo.dev/).
+  const handleSubmit = () => {
+    setSubmittedText(searchTerm);
+    setModalVisible(true);
+  };
 
-Snack is Open Source. You can find the code on the [GitHub repo](https://github.com/expo/snack).
+  const formatCredits = (credits) => {
+    if (credits === 'unknown' || !credits) return 'unknown';
+    return Number(credits).toLocaleString();
+  };
+
+  const renderItem = ({ item }) => (
+    <View style={styles.itemContainer}>
+      <Text style={styles.name}>{item.name}</Text>
+      <Text style={styles.detail}>Model: {item.model}</Text>
+      <Text style={styles.detail}>Manufacturer date: {item.manufacturer}</Text>
+      <Text style={styles.detail}>
+        Cost: {formatCredits(item.cost_in_credits)} credits
+      </Text>
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#FFE81F" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>Error: {error}</Text>
+      </View>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search spaceships..."
+          placeholderTextColor="#888"
+          value={searchTerm}
+          onChangeText={setSearchTerm}
+          onSubmittingEditing={handleSubmit}
+          returnKeyType="search"
+        />
+      </View>
+
+      <FlatList
+        data={starships}
+        keyExtractor={(item) => item.name}
+        renderItem={renderItem}
+        contentContainerStyle={styles.list}
+      />
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Search Term</Text>
+            <Text style={styles.modalText}>
+              You searched for: {submittedText}
+            </Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setModalVisible(false)}>
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
+  },
+  searchContainer: {
+    padding: 16,
+    backgroundColor: '#1a1a1a',
+    borderBottomWidth: 1,
+    borderBottomColor: '#FFE81F',
+  },
+  searchInput: {
+    backgroundColor: '#333',
+    color: '#FFE81F',
+    padding: 10,
+    borderRadius: 8,
+    fontSize: 16,
+  },
+  list: {
+    padding: 16,
+  },
+  itemContainer: {
+    backgroundColor: '#1a1a1a',
+    padding: 16,
+    marginBottom: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FFE81F',
+  },
+  name: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFE81F',
+    marginBottom: 8,
+  },
+  detail: {
+    fontSize: 14,
+    color: '#ddd',
+    marginBottom: 4,
+  },
+  errorText: {
+    color: '#FFE81F',
+    fontSize: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0,7)',
+  },
+  modalContent: {
+    backgroundColor: '#1a1a1a',
+    padding: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    corderColor: '#FFE81F',
+    width: '80%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFE81F',
+    marginBottom: 16,
+  },
+  modalText: {
+    fontSize: 18,
+    color: '#fff',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  closeButton: {
+    backgroundColor: '#FFE81F',
+    paddingVerticle: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  closeButtonText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
