@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, FlatList, ActivityIndicator, SafeAreaView, Modal, TouchableOpacity, } from 'react-native';
+import {
+  View, Text, TextInput, StyleSheet, ScrollView,
+  ActivityIndicator, SafeAreaView, Modal, TouchableOpacity,
+} from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 
 export default function FilmsScreen() {
   const [films, setFilms] = useState([]);
@@ -9,15 +13,19 @@ export default function FilmsScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [submittedText, setSubmittedText] = useState('');
 
+  const [selectedItemTitle, setSelectedItemTitle] = useState('');
+  const [itemModalVisible, setItemModalVisible] = useState(false);
+
   useEffect(() => {
     fetchFilms();
   }, []);
 
   const fetchFilms = async () => {
     try {
-      const response = await fetch('https://swapi.dev/api/films/');
+      const response = await fetch('https://www.swapi.tech/api/films/');
       const data = await response.json();
-      setFilms(data.results);
+      const filmList = data.result.map((item) => item.properties);
+      setFilms(filmList);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -30,13 +38,18 @@ export default function FilmsScreen() {
     setModalVisible(true);
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.itemContainer}>
-      <Text style={styles.title}>{item.title}</Text>
-      <Text style={styles.detail}>Episode: {item.episode_id}</Text>
-      <Text style={styles.detail}>Release date: {item.release_date}</Text>
-      <Text style={styles.detail}>Director: {item.director}</Text>
-    </View>
+  const handleSwipeOpen = (title) => {
+    setSelectedItemTitle(title);
+    setItemModalVisible(true);
+  };
+
+  const renderRightActions = (title) => (
+    <TouchableOpacity
+      style={styles.swipeAction}
+      onPress={() => handleSwipeOpen(title)}
+    >
+      <Text style={styles.swipeActionText}>More</Text>
+    </TouchableOpacity>
   );
 
   if (loading) {
@@ -64,17 +77,26 @@ export default function FilmsScreen() {
           placeholderTextColor="#888"
           value={searchTerm}
           onChangeText={setSearchTerm}
-          onSubmittingEditing={handleSubmit}
+          onSubmitEditing={handleSubmit}
           returnKeyType="search"
         />
       </View>
 
-      <FlatList
-        data={films}
-        keyExtractor={(item) => item.episode_id.toString()}
-        renderItem={renderItem}
-        contentContainerStyle={styles.list}
-      />
+      <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.list}>
+        {films.map((item) => (
+          <Swipeable
+            key={item.episode_id.toString()}
+            renderRightActions={() => renderRightActions(item.title)}
+          >
+            <View style={styles.itemContainer}>
+              <Text style={styles.title}>{item.title}</Text>
+              <Text style={styles.detail}>Episode: {item.episode_id}</Text>
+              <Text style={styles.detail}>Release date: {item.release_date}</Text>
+              <Text style={styles.detail}>Director: {item.director}</Text>
+            </View>
+          </Swipeable>
+        ))}
+      </ScrollView>
 
       <Modal
         animationType="slide"
@@ -87,11 +109,31 @@ export default function FilmsScreen() {
             <Text style={styles.modalTitle}>Search Term</Text>
             <Text style={styles.modalText}>You searched for: {submittedText}</Text>
             <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setModalVisible(false)}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
-           </TouchableOpacity>
+              style={styles.closeButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={itemModalVisible}
+        onRequestClose={() => setItemModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Film</Text>
+            <Text style={styles.modalText}>{selectedItemTitle}</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setItemModalVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -100,16 +142,8 @@ export default function FilmsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000',
-  },
+  container: { flex: 1, backgroundColor: '#000' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' },
   searchContainer: {
     padding: 16,
     backgroundColor: '#1a1a1a',
@@ -123,9 +157,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     fontSize: 16,
   },
-  list: {
-    padding: 16,
-  },
+  scrollContainer: { flex: 1 },
+  list: { padding: 16 },
   itemContainer: {
     backgroundColor: '#1a1a1a',
     padding: 16,
@@ -140,51 +173,43 @@ const styles = StyleSheet.create({
     color: '#FFE81F',
     marginBottom: 8,
   },
-  detail: {
-    fontSize: 14,
-    color: '#ddd',
-    marginBottom: 4,
-  },
-  errorText: {
-    color: '#FFE81F',
-    fontSize: 16,
-  },
+  detail: { fontSize: 14, color: '#ddd', marginBottom: 4 },
+  errorText: { color: '#FFE81F', fontSize: 16 },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0,7)',
+    backgroundColor: 'rgba(0,0,0,0.7)',
   },
   modalContent: {
     backgroundColor: '#1a1a1a',
     padding: 24,
     borderRadius: 12,
     borderWidth: 1,
-    corderColor: '#FFE81F',
+    borderColor: '#FFE81F',
     width: '80%',
     alignItems: 'center',
   },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#FFE81F',
-    marginBottom: 16,
-  },
-  modalText: {
-    fontSize: 18,
-    color: '#fff',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
+  modalTitle: { fontSize: 22, fontWeight: 'bold', color: '#FFE81F', marginBottom: 16 },
+  modalText: { fontSize: 18, color: '#fff', marginBottom: 24, textAlign: 'center' },
   closeButton: {
     backgroundColor: '#FFE81F',
-    paddingVerticle: 10,
+    paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
   },
-  closeButtonText: {
+  closeButtonText: { color: '#000', fontSize: 16, fontWeight: 'bold' },
+  swipeAction: {
+    backgroundColor: '#FFE81F',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    marginBottom: 12,
+    borderRadius: 8,
+  },
+  swipeActionText: {
     color: '#000',
-    fontSize: 16,
     fontWeight: 'bold',
+    fontSize: 16,
   },
 });

@@ -1,5 +1,7 @@
+import 'react-native-gesture-handler';
 import React from 'react';
 import { Platform } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator } from '@react-navigation/drawer';
@@ -49,8 +51,10 @@ function DrawerNavigator() {
 
 export default function App() {
   return (
-    <NavigationContainer>
-      {Platform.OS === 'ios' ? <TabNavigator /> : <DrawerNavigator />}
-    </NavigationContainer>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer>
+        {Platform.OS === 'ios' ? <TabNavigator /> : <DrawerNavigator />}
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }
