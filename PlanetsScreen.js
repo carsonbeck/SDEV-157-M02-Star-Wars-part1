@@ -1,34 +1,50 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  View, Text, TextInput, FlatList, StyleSheet,
+  View, Text, TextInput, StyleSheet, ScrollView,
   ActivityIndicator, SafeAreaView, Modal, TouchableOpacity,
+  Animated,
 } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 
-export default function SpaceshipsScreen() {
-  const [starships, setStarships] = useState([]);
+export default function PlanetsScreen() {
+  const [planets, setPlanets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [submittedText, setSubmittedText] = useState('');
 
+  const [selectedItemName, setSelectedItemName] = useState('');
+  const [itemModalVisible, setItemModalVisible] = useState(false);
+
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
-    fetchStarships();
+    fetchPlanets();
   }, []);
 
-  const fetchStarships = async () => {
+  const fetchPlanets = async () => {
     try {
-      const listResponse = await fetch('https://www.swapi.tech/api/starships/');
+      const listResponse = await fetch('https://www.swapi.tech/api/planets/');
       const listData = await listResponse.json();
-      const starshipList = listData.results;
-      const detailedStarships = await Promise.all(
-        starshipList.map(async (ship) => {
-          const detailResponse = await fetch(ship.url);
+      const planetResults = listData.results;
+
+      const detailedPlanets = await Promise.all(
+        planetResults.map(async (planet) => {
+          const detailResponse = await fetch(planet.url);
           const detailData = await detailResponse.json();
           return detailData.result.properties;
         })
       );
-      setStarships(detailedStarships);
+      setPlanets(detailedPlanets);
+
+
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }).start();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -36,9 +52,9 @@ export default function SpaceshipsScreen() {
     }
   };
 
-  const formatCredits = (credits) => {
-    if (credits === 'unknown' || !credits) return 'unknown';
-    return Number(credits).toLocaleString();
+  const formatPopulation = (population) => {
+    if (population === 'unknown' || !population) return 'unknown';
+    return Number(population).toLocaleString();
   };
 
   const handleSubmit = () => {
@@ -46,13 +62,18 @@ export default function SpaceshipsScreen() {
     setModalVisible(true);
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.itemContainer}>
-      <Text style={styles.name}>{item.name}</Text>
-      <Text style={styles.detail}>Model: {item.model}</Text>
-      <Text style={styles.detail}>Manufacturer: {item.manufacturer}</Text>
-      <Text style={styles.detail}>Cost: {formatCredits(item.cost_in_credits)} credits</Text>
-    </View>
+  const handleSwipeOpen = (itemName) => {
+    setSelectedItemName(itemName);
+    setItemModalVisible(true);
+  };
+
+  const renderRightActions = (itemName) => (
+    <TouchableOpacity
+      style={styles.swipeAction}
+      onPress={() => handleSwipeOpen(itemName)}
+    >
+      <Text style={styles.swipeActionText}>More</Text>
+    </TouchableOpacity>
   );
 
   if (loading) {
@@ -76,7 +97,7 @@ export default function SpaceshipsScreen() {
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search starships..."
+          placeholder="Search planet..."
           placeholderTextColor="#888"
           value={searchTerm}
           onChangeText={setSearchTerm}
@@ -85,12 +106,25 @@ export default function SpaceshipsScreen() {
         />
       </View>
 
-      <FlatList
-        data={starships}
-        keyExtractor={(item) => item.name}
-        renderItem={renderItem}
-        contentContainerStyle={styles.list}
-      />
+      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+        <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.list}>
+          {planets.map((item) => (
+            <Swipeable
+              key={item.name}
+              renderRightActions={() => renderRightActions(item.name)}
+            >
+              <View style={styles.itemContainer}>
+                <Text style={styles.name}>{item.name}</Text>
+                <Text style={styles.detail}>Climate: {item.climate}</Text>
+                <Text style={styles.detail}>Terrain: {item.terrain}</Text>
+                <Text style={styles.detail}>
+                  Population: {formatPopulation(item.population)}
+                </Text>
+              </View>
+            </Swipeable>
+          ))}
+        </ScrollView>
+      </Animated.View>
 
       <Modal
         animationType="slide"
@@ -105,6 +139,26 @@ export default function SpaceshipsScreen() {
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={itemModalVisible}
+        onRequestClose={() => setItemModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Planet</Text>
+            <Text style={styles.modalText}>{selectedItemName}</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setItemModalVisible(false)}
             >
               <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
@@ -131,6 +185,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     fontSize: 16,
   },
+  scrollContainer: { flex: 1 },
   list: { padding: 16 },
   itemContainer: {
     backgroundColor: '#1a1a1a',
@@ -172,4 +227,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   closeButtonText: { color: '#000', fontSize: 16, fontWeight: 'bold' },
+  swipeAction: {
+    backgroundColor: '#FFE81F',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    marginBottom: 12,
+    borderRadius: 8,
+  },
+  swipeActionText: { color: '#000', fontWeight: 'bold', fontSize: 16 },
 });
