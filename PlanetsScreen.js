@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TextInput, StyleSheet, ScrollView,
   ActivityIndicator, SafeAreaView, Modal, TouchableOpacity,
-  Animated,
+  Animated, Image,
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 
@@ -16,7 +16,6 @@ export default function PlanetsScreen() {
 
   const [selectedItemName, setSelectedItemName] = useState('');
   const [itemModalVisible, setItemModalVisible] = useState(false);
-
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -38,7 +37,6 @@ export default function PlanetsScreen() {
         })
       );
       setPlanets(detailedPlanets);
-
 
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -94,6 +92,14 @@ export default function PlanetsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Image
+        source={{
+          uri: 'https://preview.redd.it/star-wars-planets-wallpaper-4k-v0-z46q5zj4hzle1.jpg?width=1080&crop=smart&auto=webp&s=83b92b0b478143f643e6392e3e010dd4a7bb08c2',
+        }}
+        style={styles.headerImage}
+        resizeMode="cover"
+      />
+
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -172,11 +178,17 @@ export default function PlanetsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' },
+  headerImage: {
+    width: '100%',
+    height: 160,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    marginBottom: 10,
+  },
   searchContainer: {
-    padding: 16,
-    backgroundColor: '#1a1a1a',
-    borderBottomWidth: 1,
-    borderBottomColor: '#FFE81F',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    backgroundColor: '#000',  // blend with image bottom
   },
   searchInput: {
     backgroundColor: '#333',
@@ -195,12 +207,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FFE81F',
   },
-  name: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFE81F',
-    marginBottom: 8,
-  },
+  name: { fontSize: 20, fontWeight: 'bold', color: '#FFE81F', marginBottom: 8 },
   detail: { fontSize: 14, color: '#ddd', marginBottom: 4 },
   errorText: { color: '#FFE81F', fontSize: 16 },
   modalOverlay: {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, StyleSheet, ScrollView,
   ActivityIndicator, SafeAreaView, Modal, TouchableOpacity,
+  Image,
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 
@@ -70,6 +71,14 @@ export default function FilmsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Image
+        source={{
+          uri: 'https://m.media-amazon.com/images/I/81Z7VaezkWL._AC_UF894,1000_QL80_.jpg',
+        }}
+        style={styles.headerImage}
+        resizeMode="cover"
+      />
+
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -144,11 +153,17 @@ export default function FilmsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' },
+  headerImage: {
+    width: '100%',
+    height: 160,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    marginBottom: 10,
+  },
   searchContainer: {
-    padding: 16,
-    backgroundColor: '#1a1a1a',
-    borderBottomWidth: 1,
-    borderBottomColor: '#FFE81F',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    backgroundColor: '#000',
   },
   searchInput: {
     backgroundColor: '#333',
@@ -167,12 +182,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FFE81F',
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFE81F',
-    marginBottom: 8,
-  },
+  title: { fontSize: 20, fontWeight: 'bold', color: '#FFE81F', marginBottom: 8 },
   detail: { fontSize: 14, color: '#ddd', marginBottom: 4 },
   errorText: { color: '#FFE81F', fontSize: 16 },
   modalOverlay: {
@@ -207,9 +217,5 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: 8,
   },
-  swipeActionText: {
-    color: '#000',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
+  swipeActionText: { color: '#000', fontWeight: 'bold', fontSize: 16 },
 });
