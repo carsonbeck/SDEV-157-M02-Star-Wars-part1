@@ -1,24 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { registerRootComponent } from 'expo';
 
-export default function PlanetsScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Planets</Text>
-    </View>
-  );
-}
+import App from './App';
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFE81F',
-  },
-});
+// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
+// It also ensures that whether you load the app in Expo Go or in a native build,
+// the environment is set up appropriately
+registerRootComponent(App);

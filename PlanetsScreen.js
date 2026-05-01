@@ -6,16 +6,13 @@ import {
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 
-export default function PlanetsScreen() {
+export default function PlanetsScreen({ navigation }) {
   const [planets, setPlanets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [submittedText, setSubmittedText] = useState('');
-
-  const [selectedItemName, setSelectedItemName] = useState('');
-  const [itemModalVisible, setItemModalVisible] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -60,17 +57,12 @@ export default function PlanetsScreen() {
     setModalVisible(true);
   };
 
-  const handleSwipeOpen = (itemName) => {
-    setSelectedItemName(itemName);
-    setItemModalVisible(true);
-  };
-
-  const renderRightActions = (itemName) => (
+  const renderRightActions = (item) => (
     <TouchableOpacity
       style={styles.swipeAction}
-      onPress={() => handleSwipeOpen(itemName)}
+      onPress={() => navigation.navigate('PlanetDetail', { planet: item })}
     >
-      <Text style={styles.swipeActionText}>More</Text>
+      <Text style={styles.swipeActionText}>Details</Text>
     </TouchableOpacity>
   );
 
@@ -117,7 +109,7 @@ export default function PlanetsScreen() {
           {planets.map((item) => (
             <Swipeable
               key={item.name}
-              renderRightActions={() => renderRightActions(item.name)}
+              renderRightActions={() => renderRightActions(item)}
             >
               <View style={styles.itemContainer}>
                 <Text style={styles.name}>{item.name}</Text>
@@ -132,6 +124,7 @@ export default function PlanetsScreen() {
         </ScrollView>
       </Animated.View>
 
+      {/* Search Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -145,26 +138,6 @@ export default function PlanetsScreen() {
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={itemModalVisible}
-        onRequestClose={() => setItemModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Planet</Text>
-            <Text style={styles.modalText}>{selectedItemName}</Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setItemModalVisible(false)}
             >
               <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
@@ -188,7 +161,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     paddingHorizontal: 16,
     paddingBottom: 16,
-    backgroundColor: '#000',  // blend with image bottom
+    backgroundColor: '#000',
   },
   searchInput: {
     backgroundColor: '#333',
