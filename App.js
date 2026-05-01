@@ -5,14 +5,39 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createStackNavigator } from '@react-navigation/stack';
 import NetInfo from '@react-native-community/netinfo';
 
 import PlanetsScreen from './screens/PlanetsScreen';
+import PlanetDetailScreen from './screens/PlanetDetailScreen';
 import FilmsScreen from './screens/FilmsScreen';
 import SpaceshipsScreen from './screens/SpaceshipsScreen';
 
 const Tab = createBottomTabNavigator();
 const Drawer = createDrawerNavigator();
+const Stack = createStackNavigator();
+
+function PlanetsStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: '#000' },
+        headerTintColor: '#FFE81F',
+      }}
+    >
+      <Stack.Screen
+        name="PlanetsList"
+        component={PlanetsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="PlanetDetail"
+        component={PlanetDetailScreen}
+        options={{ title: 'Planet Detail' }}
+      />
+    </Stack.Navigator>
+  );
+}
 
 function TabNavigator() {
   return (
@@ -25,7 +50,7 @@ function TabNavigator() {
         headerTintColor: '#FFE81F',
       }}
     >
-      <Tab.Screen name="Planets" component={PlanetsScreen} />
+      <Tab.Screen name="Planets" component={PlanetsStack} options={{ headerShown: false }} />
       <Tab.Screen name="Films" component={FilmsScreen} />
       <Tab.Screen name="Spaceships" component={SpaceshipsScreen} />
     </Tab.Navigator>
@@ -43,7 +68,7 @@ function DrawerNavigator() {
         headerTintColor: '#FFE81F',
       }}
     >
-      <Drawer.Screen name="Planets" component={PlanetsScreen} />
+      <Drawer.Screen name="Planets" component={PlanetsStack} options={{ headerShown: false }} />
       <Drawer.Screen name="Films" component={FilmsScreen} />
       <Drawer.Screen name="Spaceships" component={SpaceshipsScreen} />
     </Drawer.Navigator>
@@ -57,7 +82,6 @@ export default function App() {
     const unsubscribe = NetInfo.addEventListener(state => {
       setIsConnected(state.isConnected);
     });
-
     return () => unsubscribe();
   }, []);
 
