@@ -6,12 +6,11 @@ import {
 export default function PlanetDetailScreen({ route }) {
   const { planet } = route.params;
 
-  // Format numeric values with commas, leave non-numeric as-is
   const formatValue = (value, isNumeric = false) => {
     if (!value || value === 'unknown') return 'unknown';
     if (isNumeric) {
       const num = Number(value);
-      if (isNaN(num)) return value; // fallback if not a number
+      if (isNaN(num)) return value;
       return num.toLocaleString();
     }
     return value;

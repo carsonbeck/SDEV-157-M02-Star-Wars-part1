@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View, Text, TextInput, StyleSheet, ScrollView,
-  ActivityIndicator, SafeAreaView, Modal, TouchableOpacity,
+  ActivityIndicator, SafeAreaView, TouchableOpacity,
   Animated, Image,
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
@@ -11,8 +11,6 @@ export default function PlanetsScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [modalVisible, setModalVisible] = useState(false);
-  const [submittedText, setSubmittedText] = useState('');
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -47,14 +45,17 @@ export default function PlanetsScreen({ navigation }) {
     }
   };
 
+  const filteredPlanets = useMemo(() => {
+    if (!searchTerm.trim()) return planets;
+    const lowerTerm = searchTerm.toLowerCase();
+    return planets.filter(planet =>
+      planet.name.toLowerCase().includes(lowerTerm)
+    );
+  }, [planets, searchTerm]);
+
   const formatPopulation = (population) => {
     if (population === 'unknown' || !population) return 'unknown';
     return Number(population).toLocaleString();
-  };
-
-  const handleSubmit = () => {
-    setSubmittedText(searchTerm);
-    setModalVisible(true);
   };
 
   const renderRightActions = (item) => (
@@ -99,14 +100,13 @@ export default function PlanetsScreen({ navigation }) {
           placeholderTextColor="#888"
           value={searchTerm}
           onChangeText={setSearchTerm}
-          onSubmitEditing={handleSubmit}
           returnKeyType="search"
         />
       </View>
 
       <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
         <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.list}>
-          {planets.map((item) => (
+          {filteredPlanets.map((item) => (
             <Swipeable
               key={item.name}
               renderRightActions={() => renderRightActions(item)}
@@ -123,27 +123,6 @@ export default function PlanetsScreen({ navigation }) {
           ))}
         </ScrollView>
       </Animated.View>
-
-      {/* Search Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Search Term</Text>
-            <Text style={styles.modalText}>You searched for: {submittedText}</Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -183,30 +162,6 @@ const styles = StyleSheet.create({
   name: { fontSize: 20, fontWeight: 'bold', color: '#FFE81F', marginBottom: 8 },
   detail: { fontSize: 14, color: '#ddd', marginBottom: 4 },
   errorText: { color: '#FFE81F', fontSize: 16 },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.7)',
-  },
-  modalContent: {
-    backgroundColor: '#1a1a1a',
-    padding: 24,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FFE81F',
-    width: '80%',
-    alignItems: 'center',
-  },
-  modalTitle: { fontSize: 22, fontWeight: 'bold', color: '#FFE81F', marginBottom: 16 },
-  modalText: { fontSize: 18, color: '#fff', marginBottom: 24, textAlign: 'center' },
-  closeButton: {
-    backgroundColor: '#FFE81F',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-  },
-  closeButtonText: { color: '#000', fontSize: 16, fontWeight: 'bold' },
   swipeAction: {
     backgroundColor: '#FFE81F',
     justifyContent: 'center',
